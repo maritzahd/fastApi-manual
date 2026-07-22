@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI - Manual Interactivo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../static/css/style.css">
+    <style>
+        /* ===== LOGIN OVERLAY ===== */
+        .auth-overlay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 3.5rem;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(26, 74, 58, 0.15);
+            border: 1.5px solid var(--border-green);
+        }
+
+        .auth-card .logo-big {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-card .logo-big h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .auth-card .logo-big h1 span {
+            color: var(--green-mid);
+        }
+
+        .auth-card .logo-big p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: var(--green-bg);
+            border-radius: 12px;
+            padding: 0.4rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: var(--text-soft);
+            font-family: inherit;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(45, 107, 85, 0.12);
+        }
+
+        .auth-tab:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .auth-form label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-soft);
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-green);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--green-white);
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--green-mid);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(45, 107, 85, 0.1);
+        }
+
+        .auth-form .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--green-mid);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            margin-top: 0.5rem;
+        }
+
+        .auth-form .btn-submit:hover {
+            background: var(--green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 107, 85, 0.25);
+        }
+
+        .auth-form .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-message {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .auth-message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .auth-message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .demo-user {
+            background: var(--green-bg);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-align: center;
+            color: var(--text-soft);
+        }
+        .demo-user strong {
+            color: var(--text-dark);
+        }
+
+        /* ===== CONTENIDO DEL MANUAL ===== */
+        .manual-content {
+            display: none;
+        }
+
+        .manual-content.visible {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--green-mid);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1.5px solid var(--border-green);
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            color: var(--text-soft);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-logout:hover {
+            background: var(--green-mid);
+            border-color: var(--green-mid);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            .manual-content.visible {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                Manual <span>FastAPI</span>
+            </div>
+            <nav class="nav-links" id="mainNav">
+                <a href="/" class="active">Inicio</a>
+                <a href="https://fastapi.tiangolo.com" target="_blank" class="nav-link-highlight">Sitio oficial</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+        <!-- ===== LOGIN ===== -->
+        <div id="authSection" class="auth-overlay">
+            <div class="auth-card">
+                <div class="logo-big">
+                    <h1>📘 Manual <span>FastAPI</span></h1>
+                    <p>Accede para comenzar a aprender</p>
+                </div>
+
+                <div class="demo-user">
+                    👤 Usuario demo: <strong>admin</strong> | Contraseña: <strong>123456</strong>
+                </div>
+
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+                    <button class="auth-tab" data-tab="register">Registrarse</button>
+                </div>
+
+                <div id="authMessage" class="auth-message"></div>
+
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label>👤 Usuario</label>
+                        <input type="text" id="loginUsername" placeholder="Ej: admin" value="admin">
+                    </div>
+                    <div class="form-group">
+                        <label>🔒 Contraseña</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" value="123456">
+                    </div>
+                    <button type="submit" class="btn-submit">Iniciar Sesión</button>
+                </form>
+
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label>👤 Usuario</label>
+                        <input type="text" id="registerUsername" placeholder="Ej: juan123" minlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label>📧 Email</label>
+                        <input type="email" id="registerEmail" placeholder="ejemplo@correo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>🔒 Contraseña</label>
+                        <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>✅ Confirmar</label>
+                        <input type="password" id="registerPasswordConfirm" placeholder="Repite tu contraseña">
+                    </div>
+                    <button type="submit" class="btn-submit">Crear Cuenta</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== MANUAL ===== -->
+        <div id="manualContent" class="manual-content">
+            <aside class="sidebar" id="sidebar"></aside>
+            <main class="content" id="content-area"></main>
+        </div>
+
+        <div class="loading" id="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== VARIABLES =====
+        const authSection = document.getElementById('authSection');
+        const manualContent = document.getElementById('manualContent');
+        const authMessage = document.getElementById('authMessage');
+
+        function showMessage(text, type = 'error') {
+            authMessage.textContent = text;
+            authMessage.className = 'auth-message ' + type;
+        }
+
+        // ===== TABS =====
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const tabName = this.dataset.tab;
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                document.getElementById(tabName + 'Form').classList.add('active');
+                authMessage.className = 'auth-message';
+                authMessage.textContent = '';
+            });
+        });
+
+        // ===== REGISTRO =====
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            if (!username || !email || !password) {
+                return showMessage('❌ Completa todos los campos', 'error');
+            }
+            if (password.length < 6) {
+                return showMessage('❌ La contraseña debe tener al menos 6 caracteres', 'error');
+            }
+            if (password !== passwordConfirm) {
+                return showMessage('❌ Las contraseñas no coinciden', 'error');
+            }
+
+            const btn = this.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Registrando...';
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showMessage('✅ ¡Registro exitoso! Ahora inicia sesión', 'success');
+                    this.reset();
+                    document.querySelector('.auth-tab[data-tab="login"]').click();
+                } else {
+                    showMessage('❌ ' + (data.detail || 'Error al registrar'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión al servidor', 'error');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Crear Cuenta';
+        });
+
+        // ===== LOGIN =====
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                return showMessage('❌ Completa todos los campos', 'error');
+            }
+
+            const btn = this.querySelector('.btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Iniciando...';
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('access_token', data.access_token);
+                    showMessage('✅ ¡Bienvenido! Cargando el manual...', 'success');
+
+                    setTimeout(() => {
+                        authSection.style.display = 'none';
+                        manualContent.classList.add('visible');
+                        if (typeof loadTopic === 'function') {
+                            loadTopic(1);
+                        }
+                        updateHeader(username);
+                    }, 800);
+                } else {
+                    showMessage('❌ ' + (data.detail || 'Usuario o contraseña incorrectos'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión al servidor', 'error');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Iniciar Sesión';
+        });
+
+        // ===== HEADER =====
+        function updateHeader(username) {
+            const nav = document.getElementById('mainNav');
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            userInfo.innerHTML = `
+                <div class="user-avatar">${username.charAt(0).toUpperCase()}</div>
+                <span style="color: var(--text-soft); font-weight: 500;">${username}</span>
+                <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+            `;
+            nav.appendChild(userInfo);
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            location.reload();
+        }
+
+        // ===== VERIFICAR SESIÓN =====
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                try {
+                    const res = await fetch('/me', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        authSection.style.display = 'none';
+                        manualContent.classList.add('visible');
+                        updateHeader(user.username);
+                        if (typeof loadTopic === 'function') {
+                            loadTopic(1);
+                        }
+                        return;
+                    }
+                } catch (error) {}
+                localStorage.removeItem('access_token');
+            }
+            authSection.style.display = 'flex';
+            manualContent.classList.remove('visible');
+        });
+    </script>
+
+    <script src="../../static/js/main.js""></script>
+</body>
+</html>
